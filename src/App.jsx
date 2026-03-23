@@ -13,21 +13,25 @@ const fadeStyle = `
     from { opacity: 0; transform: translateY(12px); }
     to   { opacity: 1; transform: translateY(0); }
   }
-  .page-enter {
-    animation: pageEnter 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-  }
-  .page-exit {
-    opacity: 0;
-    transition: opacity 0.25s ease;
-  }
+  .page-enter { animation: pageEnter 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+  .page-exit  { opacity: 0; transition: opacity 0.25s ease; }
 `;
 
-function isAuthenticated() {
-  return localStorage.getItem("auth") !== null;
+export function getAuth() {
+  const auth = localStorage.getItem("auth");
+  return auth ? JSON.parse(auth) : null;
 }
 
-function PrivateRoute({ children }) {
-  return isAuthenticated() ? children : <Navigate to="/login" replace />;
+export function getRole() {
+  const auth = getAuth();
+  return auth ? auth.role : null;
+}
+
+function PrivateRoute({ children, dentistaOnly = false }) {
+  const auth = getAuth();
+  if (!auth) return <Navigate to="/login" replace />;
+  if (dentistaOnly && auth.role !== "dentista") return <Navigate to="/" replace />;
+  return children;
 }
 
 function AnimatedRoutes() {
@@ -49,18 +53,17 @@ function AnimatedRoutes() {
   return (
     <>
       <style>{fadeStyle}</style>
-      <div
-        key={displayLocation.pathname}
-        className={stage === "enter" ? "page-enter" : "page-exit"}
-        style={{ width: "100%", minHeight: "100vh" }}
-      >
+      <div key={displayLocation.pathname} className={stage === "enter" ? "page-enter" : "page-exit"} style={{ width: "100%", minHeight: "100vh" }}>
         <Routes location={displayLocation}>
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
           <Route path="/agenda" element={<PrivateRoute><Agenda /></PrivateRoute>} />
-          <Route path="/patients" element={<PrivateRoute><Patients /></PrivateRoute>} />
-          <Route path="/procedures" element={<PrivateRoute><Procedures /></PrivateRoute>} />
-          <Route path="/financial" element={<PrivateRoute><Financial /></PrivateRoute>} />
+
+          {/* Somente dentista */}
+          <Route path="/patients" element={<PrivateRoute dentistaOnly><Patients /></PrivateRoute>} />
+          <Route path="/procedures" element={<PrivateRoute dentistaOnly><Procedures /></PrivateRoute>} />
+          <Route path="/financial" element={<PrivateRoute dentistaOnly><Financial /></PrivateRoute>} />
+
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </div>
