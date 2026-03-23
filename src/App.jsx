@@ -9,12 +9,16 @@ import Financial from "./pages/Financial";
 import Login from "./pages/Login";
 
 const fadeStyle = `
-  @keyframes pageFade {
-    from { opacity: 0; transform: translateY(8px); }
+  @keyframes pageEnter {
+    from { opacity: 0; transform: translateY(12px); }
     to   { opacity: 1; transform: translateY(0); }
   }
-  .page-fade {
-    animation: pageFade 0.25s ease forwards;
+  .page-enter {
+    animation: pageEnter 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+  .page-exit {
+    opacity: 0;
+    transition: opacity 0.25s ease;
   }
 `;
 
@@ -29,15 +33,15 @@ function PrivateRoute({ children }) {
 function AnimatedRoutes() {
   const location = useLocation();
   const [displayLocation, setDisplayLocation] = useState(location);
-  const [visible, setVisible] = useState(true);
+  const [stage, setStage] = useState("enter");
 
   useEffect(() => {
     if (location.pathname !== displayLocation.pathname) {
-      setVisible(false);
+      setStage("exit");
       const t = setTimeout(() => {
         setDisplayLocation(location);
-        setVisible(true);
-      }, 150);
+        setStage("enter");
+      }, 250);
       return () => clearTimeout(t);
     }
   }, [location]);
@@ -47,8 +51,8 @@ function AnimatedRoutes() {
       <style>{fadeStyle}</style>
       <div
         key={displayLocation.pathname}
-        className={visible ? "page-fade" : ""}
-        style={{ opacity: visible ? 1 : 0, transition: "opacity 0.15s ease", width: "100%", minHeight: "100vh" }}
+        className={stage === "enter" ? "page-enter" : "page-exit"}
+        style={{ width: "100%", minHeight: "100vh" }}
       >
         <Routes location={displayLocation}>
           <Route path="/login" element={<Login />} />
