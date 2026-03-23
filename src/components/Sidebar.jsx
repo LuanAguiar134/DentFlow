@@ -12,7 +12,7 @@ const style = `
     font-size: 14px;
     font-weight: 500;
     transition: background 0.2s, color 0.2s, transform 0.15s;
-    cursor: pointer;
+    position: relative;
   }
   .nav-item:hover {
     background: #f0f7ff !important;
@@ -20,6 +20,17 @@ const style = `
     transform: translateX(3px);
   }
   .nav-item:hover span { color: #1976d2 !important; }
+  .nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 60%;
+    background: #2196f3;
+    border-radius: 0 3px 3px 0;
+  }
   .logout-btn {
     display: flex;
     align-items: center;
@@ -33,6 +44,7 @@ const style = `
     color: #888;
     font-size: 14px;
     font-weight: 500;
+    font-family: inherit;
     transition: background 0.2s, color 0.2s, transform 0.15s;
   }
   .logout-btn:hover {
@@ -54,7 +66,7 @@ export default function Sidebar() {
   return (
     <>
       <style>{style}</style>
-      <div style={{ height: "100vh", width: "210px", background: "#fff", borderRight: "1px solid #e8edf5", display: "flex", flexDirection: "column", flexShrink: 0 }}>
+      <div style={{ height: "100vh", width: "210px", background: "#fff", borderRight: "1px solid #e8edf5", display: "flex", flexDirection: "column", flexShrink: 0, overflow: "hidden" }}>
         {/* Logo */}
         <div style={{ padding: "16px", borderBottom: "1px solid #e8edf5" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -69,7 +81,7 @@ export default function Sidebar() {
         </div>
 
         {/* Nav */}
-        <nav style={{ flex: 1, padding: "12px 8px" }}>
+        <nav style={{ flex: 1, padding: "12px 8px 12px 16px" }}>
           <NavItem to="/" label="Dashboard" active={location.pathname === "/"} icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>} />
           <NavItem to="/agenda" label="Agenda" active={location.pathname === "/agenda"} icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>} />
           <NavItem to="/patients" label="Pacientes" active={location.pathname === "/patients"} icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>} />
@@ -91,7 +103,9 @@ export default function Sidebar() {
 
 function NavItem({ to, label, active, icon }) {
   return (
-    <Link to={to} className="nav-item" style={{ background: active ? "#e3f2fd" : "transparent", color: active ? "#1976d2" : "#555" }}>
+    <Link to={to} className={`nav-item${active ? " active" : ""}`}
+      style={{ background: active ? "#e3f2fd" : "transparent", color: active ? "#1976d2" : "#555" }}
+    >
       <span style={{ color: active ? "#1976d2" : "#888", display: "flex" }}>{icon}</span>
       {label}
     </Link>
