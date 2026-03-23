@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Sidebar from "../components/Sidebar";
+import Toast from "../components/Toast";
 
 const animStyle = `
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -28,10 +29,12 @@ export default function Procedures() {
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
+  const [toast, setToast] = useState(null);
 
   useEffect(() => { const s = localStorage.getItem("procedures"); if (s) setProcedures(JSON.parse(s)); }, []);
   useEffect(() => { localStorage.setItem("procedures", JSON.stringify(procedures)); }, [procedures]);
 
+  function showToast(message, type = "success") { setToast({ message, type }); }
   function openNew() { setForm(emptyForm); setEditingId(null); setModalOpen(true); }
   function openEdit(p) { setForm({ ...p }); setEditingId(p.id); setModalOpen(true); }
   function closeModal() { setModalOpen(false); setForm(emptyForm); setEditingId(null); }
@@ -42,15 +45,19 @@ export default function Procedures() {
     if (!form.price) return alert("Valor é obrigatório.");
     if (editingId) {
       setProcedures((prev) => prev.map((p) => p.id === editingId ? { ...form, id: editingId } : p));
+      showToast("Procedimento atualizado com sucesso!");
     } else {
       setProcedures((prev) => [...prev, { ...form, id: Date.now() }]);
+      showToast("Procedimento cadastrado com sucesso!");
     }
     closeModal();
   }
 
   function removeProcedure(id) {
-    if (window.confirm("Deseja excluir este procedimento?"))
+    if (window.confirm("Deseja excluir este procedimento?")) {
       setProcedures((prev) => prev.filter((p) => p.id !== id));
+      showToast("Procedimento removido.", "info");
+    }
   }
 
   function formatPrice(val) {
@@ -141,6 +148,8 @@ export default function Procedures() {
           </div>
         </div>
       )}
+
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Sidebar from "../components/Sidebar";
+import Toast from "../components/Toast";
 
 const animStyle = `
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -39,6 +40,7 @@ export default function Agenda() {
   const [selectedDay, setSelectedDay] = useState(toISO(new Date()));
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     const a = localStorage.getItem("appointments"); if (a) setAppointments(JSON.parse(a));
@@ -46,6 +48,8 @@ export default function Agenda() {
   }, []);
 
   useEffect(() => { localStorage.setItem("appointments", JSON.stringify(appointments)); }, [appointments]);
+
+  function showToast(message, type = "success") { setToast({ message, type }); }
 
   const weekDays = getWeekDays(reference);
   function prevWeek() { const d = new Date(reference); d.setDate(d.getDate() - 7); setReference(d); }
@@ -59,12 +63,15 @@ export default function Agenda() {
     if (!form.date) return alert("Selecione uma data.");
     if (!form.time) return alert("Selecione um horário.");
     setAppointments((prev) => [...prev, { ...form, id: Date.now() }]);
+    showToast("Consulta agendada com sucesso!");
     closeModal();
   }
 
   function removeAppointment(id) {
-    if (window.confirm("Deseja remover esta consulta?"))
+    if (window.confirm("Deseja remover esta consulta?")) {
       setAppointments((prev) => prev.filter((a) => a.id !== id));
+      showToast("Consulta removida.", "info");
+    }
   }
 
   const selectedDayAppointments = appointments.filter((a) => a.date === selectedDay).sort((a, b) => a.time.localeCompare(b.time));
@@ -76,7 +83,6 @@ export default function Agenda() {
     <div style={{ display: "flex", background: "#f0f4f8", minHeight: "100vh" }}>
       <style>{animStyle}</style>
       <Sidebar />
-
       <div style={{ flex: 1, padding: "28px 32px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px" }}>
           <div>
@@ -86,7 +92,6 @@ export default function Agenda() {
           <button className="btn-primary-anim" onClick={openModal} style={{ background: "#2563eb", color: "#fff", border: "none", padding: "10px 20px", borderRadius: "8px", fontSize: "14px", fontWeight: 600, cursor: "pointer" }}>+ Nova Consulta</button>
         </div>
 
-        {/* Calendário */}
         <div style={{ background: "#fff", borderRadius: "12px", border: "1px solid #e2e8f0", padding: "20px", marginBottom: "20px" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
             <button onClick={prevWeek} style={{ background: "transparent", border: "1px solid #e2e8f0", borderRadius: "6px", width: 32, height: 32, fontSize: "18px", cursor: "pointer", color: "#555" }}>‹</button>
@@ -111,7 +116,6 @@ export default function Agenda() {
           </div>
         </div>
 
-        {/* Lista */}
         <div style={{ background: "#fff", borderRadius: "12px", border: "1px solid #e2e8f0", padding: "20px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
             <h2 style={{ fontSize: "16px", fontWeight: 700, color: "#1e3a8a", margin: 0, textTransform: "capitalize" }}>{selectedLabel}</h2>
@@ -141,7 +145,6 @@ export default function Agenda() {
         </div>
       </div>
 
-      {/* MODAL */}
       {modalOpen && (
         <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && closeModal()}
           style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }}>
@@ -170,6 +173,8 @@ export default function Agenda() {
           </div>
         </div>
       )}
+
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
 }

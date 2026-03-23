@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Sidebar from "../components/Sidebar";
+import Toast from "../components/Toast";
 
 const animStyle = `
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -27,6 +28,7 @@ export default function Financial() {
   const [patients, setPatients] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     const p = localStorage.getItem("payments"); if (p) setPayments(JSON.parse(p));
@@ -35,6 +37,7 @@ export default function Financial() {
 
   useEffect(() => { localStorage.setItem("payments", JSON.stringify(payments)); }, [payments]);
 
+  function showToast(message, type = "success") { setToast({ message, type }); }
   function openModal() { setForm({ ...emptyForm, date: new Date().toISOString().split("T")[0] }); setModalOpen(true); }
   function closeModal() { setModalOpen(false); setForm(emptyForm); }
   function handleField(field, value) { setForm((f) => ({ ...f, [field]: value })); }
@@ -43,12 +46,15 @@ export default function Financial() {
     if (!form.amount || Number(form.amount) <= 0) return alert("Informe um valor válido.");
     if (!form.date) return alert("Informe a data.");
     setPayments((prev) => [...prev, { ...form, id: Date.now(), amount: Number(form.amount) }]);
+    showToast("Pagamento registrado com sucesso!");
     closeModal();
   }
 
   function removePayment(id) {
-    if (window.confirm("Deseja remover este pagamento?"))
+    if (window.confirm("Deseja remover este pagamento?")) {
       setPayments((prev) => prev.filter((p) => p.id !== id));
+      showToast("Pagamento removido.", "info");
+    }
   }
 
   function formatBRL(val) { return Number(val).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }); }
@@ -56,7 +62,7 @@ export default function Financial() {
 
   const now = new Date();
   const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-  const monthPayments = payments.filter((p) => p.date && p.date.startsWith(thisMonth));
+  const monthPayments = payments.filter((p) => p.date?.startsWith(thisMonth));
   const recebido = monthPayments.filter((p) => p.status === "Pago").reduce((acc, p) => acc + p.amount, 0);
   const pendente = monthPayments.filter((p) => p.status === "Pendente").reduce((acc, p) => acc + p.amount, 0);
   const total = monthPayments.reduce((acc, p) => acc + p.amount, 0);
@@ -75,23 +81,22 @@ export default function Financial() {
           <button className="btn-primary-anim" onClick={openModal} style={{ background: "#2563eb", color: "#fff", border: "none", padding: "10px 20px", borderRadius: "8px", fontSize: "14px", fontWeight: 600, cursor: "pointer" }}>+ Novo Pagamento</button>
         </div>
 
-        {/* Cards */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", marginBottom: "24px" }}>
-          <div className="summary-card" style={{ background: "#fff", borderRadius: "12px", border: "1px solid #e2e8f0", padding: "20px", display: "flex", alignItems: "center", gap: "16px" }}>
-            <div style={{ width: 44, height: 44, borderRadius: "10px", background: "#dcfce7", color: "#16a34a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", flexShrink: 0 }}>$</div>
-            <div><p style={{ margin: 0, fontSize: "13px", color: "#888", fontWeight: 500 }}>Recebido (Mês)</p><p style={{ margin: "4px 0 0", fontSize: "20px", fontWeight: 700, color: "#1a1a2e" }}>{formatBRL(recebido)}</p></div>
-          </div>
-          <div className="summary-card" style={{ background: "#fff", borderRadius: "12px", border: "1px solid #e2e8f0", padding: "20px", display: "flex", alignItems: "center", gap: "16px" }}>
-            <div style={{ width: 44, height: 44, borderRadius: "10px", background: "#fef9c3", color: "#ca8a04", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", flexShrink: 0 }}>⏳</div>
-            <div><p style={{ margin: 0, fontSize: "13px", color: "#888", fontWeight: 500 }}>Pendente</p><p style={{ margin: "4px 0 0", fontSize: "20px", fontWeight: 700, color: "#1a1a2e" }}>{formatBRL(pendente)}</p></div>
-          </div>
-          <div className="summary-card" style={{ background: "#fff", borderRadius: "12px", border: "1px solid #e2e8f0", padding: "20px", display: "flex", alignItems: "center", gap: "16px" }}>
-            <div style={{ width: 44, height: 44, borderRadius: "10px", background: "#dbeafe", color: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", flexShrink: 0 }}>↗</div>
-            <div><p style={{ margin: 0, fontSize: "13px", color: "#888", fontWeight: 500 }}>Total (Mês)</p><p style={{ margin: "4px 0 0", fontSize: "20px", fontWeight: 700, color: "#1a1a2e" }}>{formatBRL(total)}</p></div>
-          </div>
+          {[
+            { label: "Recebido (Mês)", value: formatBRL(recebido), bg: "#dcfce7", color: "#16a34a", icon: "$" },
+            { label: "Pendente", value: formatBRL(pendente), bg: "#fef9c3", color: "#ca8a04", icon: "⏳" },
+            { label: "Total (Mês)", value: formatBRL(total), bg: "#dbeafe", color: "#2563eb", icon: "↗" },
+          ].map((c) => (
+            <div key={c.label} className="summary-card" style={{ background: "#fff", borderRadius: "12px", border: "1px solid #e2e8f0", padding: "20px", display: "flex", alignItems: "center", gap: "16px" }}>
+              <div style={{ width: 44, height: 44, borderRadius: "10px", background: c.bg, color: c.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", flexShrink: 0 }}>{c.icon}</div>
+              <div>
+                <p style={{ margin: 0, fontSize: "13px", color: "#888", fontWeight: 500 }}>{c.label}</p>
+                <p style={{ margin: "4px 0 0", fontSize: "20px", fontWeight: 700, color: "#1a1a2e" }}>{c.value}</p>
+              </div>
+            </div>
+          ))}
         </div>
 
-        {/* Lista */}
         <div style={{ background: "#fff", borderRadius: "12px", border: "1px solid #e2e8f0", padding: "20px" }}>
           <h2 style={{ fontSize: "16px", fontWeight: 700, color: "#1a1a2e", margin: "0 0 16px" }}>Últimos Pagamentos</h2>
           {sorted.length === 0 ? (
@@ -164,6 +169,8 @@ export default function Financial() {
           </div>
         </div>
       )}
+
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
 }
