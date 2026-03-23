@@ -69,10 +69,9 @@ function NavLink({ to, children }) {
         fontSize: "14px",
         fontWeight: 500,
         display: "block",
-        transition: "background 0.15s",
       }}
-      onMouseEnter={(e) => (e.target.style.background = "rgba(255,255,255,0.15)")}
-      onMouseLeave={(e) => (e.target.style.background = "transparent")}
+      onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.15)")}
+      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
     >
       {children}
     </Link>
