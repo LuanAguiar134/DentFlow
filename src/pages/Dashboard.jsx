@@ -2,6 +2,11 @@ import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
+const animStyle = `
+  .summary-card { transition: box-shadow 0.15s, transform 0.15s; }
+  .summary-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); transform: translateY(-2px); }
+`;
+
 const DAYS_PT = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 export default function Dashboard() {
@@ -10,12 +15,9 @@ export default function Dashboard() {
   const [payments, setPayments] = useState([]);
 
   useEffect(() => {
-    const p = localStorage.getItem("patients");
-    if (p) setPatients(JSON.parse(p));
-    const a = localStorage.getItem("appointments");
-    if (a) setAppointments(JSON.parse(a));
-    const f = localStorage.getItem("payments");
-    if (f) setPayments(JSON.parse(f));
+    const p = localStorage.getItem("patients"); if (p) setPatients(JSON.parse(p));
+    const a = localStorage.getItem("appointments"); if (a) setAppointments(JSON.parse(a));
+    const f = localStorage.getItem("payments"); if (f) setPayments(JSON.parse(f));
   }, []);
 
   const today = new Date().toISOString().split("T")[0];
@@ -41,6 +43,7 @@ export default function Dashboard() {
 
   return (
     <div style={{ display: "flex", background: "#f0f4f8", minHeight: "100vh" }}>
+      <style>{animStyle}</style>
       <Sidebar />
 
       <div style={{ flex: 1, padding: "28px 32px" }}>
@@ -115,7 +118,7 @@ export default function Dashboard() {
 
 function Card({ label, value, sub, iconBg, iconColor, icon }) {
   return (
-    <div style={{ background: "#fff", borderRadius: "12px", border: "1px solid #e8edf5", padding: "20px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+    <div className="summary-card" style={{ background: "#fff", borderRadius: "12px", border: "1px solid #e8edf5", padding: "20px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
       <div>
         <p style={{ margin: 0, fontSize: "13px", color: "#888", fontWeight: 500 }}>{label}</p>
         <p style={{ margin: "8px 0 4px", fontSize: "28px", fontWeight: 700, color: "#1a1a2e" }}>{value}</p>
