@@ -18,8 +18,12 @@ const fadeStyle = `
 `;
 
 export function getAuth() {
-  const auth = localStorage.getItem("auth");
-  return auth ? JSON.parse(auth) : null;
+  // Primeiro tenta sessionStorage (sem lembrar), depois localStorage (lembrar)
+  const session = sessionStorage.getItem("auth");
+  if (session) return JSON.parse(session);
+  const local = localStorage.getItem("auth");
+  if (local) return JSON.parse(local);
+  return null;
 }
 
 export function getRole() {
@@ -53,17 +57,15 @@ function AnimatedRoutes() {
   return (
     <>
       <style>{fadeStyle}</style>
-      <div key={displayLocation.pathname} className={stage === "enter" ? "page-enter" : "page-exit"} style={{ width: "100%", minHeight: "100vh" }}>
+      <div key={displayLocation.pathname} className={stage === "enter" ? "page-enter" : "page-exit"}
+        style={{ width: "100%", minHeight: "100vh" }}>
         <Routes location={displayLocation}>
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
           <Route path="/agenda" element={<PrivateRoute><Agenda /></PrivateRoute>} />
-
-          {/* Somente dentista */}
           <Route path="/patients" element={<PrivateRoute dentistaOnly><Patients /></PrivateRoute>} />
           <Route path="/procedures" element={<PrivateRoute dentistaOnly><Procedures /></PrivateRoute>} />
           <Route path="/financial" element={<PrivateRoute dentistaOnly><Financial /></PrivateRoute>} />
-
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </div>
