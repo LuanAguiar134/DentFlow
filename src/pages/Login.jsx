@@ -2,6 +2,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Welcome from "../components/Welcome";
 
+// Foto noturna azulada do Unsplash (livre para uso)
+const BG_IMAGE = "https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=1920&q=80&auto=format&fit=crop";
+
 const loginStyle = `
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(20px); }
@@ -15,19 +18,25 @@ const loginStyle = `
     from { opacity: 0; transform: translateX(-20px); }
     to   { opacity: 1; transform: translateX(0); }
   }
-  .login-card     { animation: fadeUp 0.4s cubic-bezier(0.25,0.46,0.45,0.94) forwards; }
+  .login-card     { animation: fadeUp 0.5s cubic-bezier(0.25,0.46,0.45,0.94) forwards; }
   .tab-content-right { animation: tabEnter 0.3s cubic-bezier(0.25,0.46,0.45,0.94) forwards; }
   .tab-content-left  { animation: tabEnterLeft 0.3s cubic-bezier(0.25,0.46,0.45,0.94) forwards; }
-  .tab-btn     { transition: background 0.2s, color 0.2s, box-shadow 0.2s; cursor: pointer; border: none; font-family: inherit; }
-  .input-login { transition: border-color 0.2s, box-shadow 0.2s; }
-  .input-login:focus { border-color: #2563eb !important; box-shadow: 0 0 0 3px rgba(37,99,235,0.12) !important; outline: none; }
-  .btn-login   { transition: background 0.15s, transform 0.1s; }
-  .btn-login:hover  { background: #1d4ed8 !important; }
+  .tab-btn { transition: all 0.2s; cursor: pointer; border: none; font-family: inherit; }
+  .input-login { transition: border-color 0.2s, box-shadow 0.2s, background 0.2s; }
+  .input-login:focus {
+    border-color: rgba(96,165,250,0.8) !important;
+    box-shadow: 0 0 0 3px rgba(96,165,250,0.2) !important;
+    outline: none;
+    background: rgba(255,255,255,0.15) !important;
+  }
+  .input-login::placeholder { color: rgba(255,255,255,0.35) !important; }
+  .btn-login { transition: all 0.2s; }
+  .btn-login:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(33,150,243,0.5) !important; }
   .btn-login:active { transform: scale(0.98); }
-  .role-btn    { transition: all 0.2s; cursor: pointer; border: 2px solid transparent; }
-  .role-btn:hover  { border-color: #2563eb; }
-  .role-btn.selected { border-color: #2563eb; background: #eff6ff !important; }
-  .remember-check { cursor: pointer; accent-color: #2563eb; width: 16px; height: 16px; }
+  .role-btn { transition: all 0.2s; cursor: pointer; }
+  .role-btn:hover { border-color: rgba(96,165,250,0.5) !important; background: rgba(255,255,255,0.12) !important; }
+  .role-btn.selected { border-color: rgba(96,165,250,0.8) !important; background: rgba(33,150,243,0.2) !important; }
+  .remember-check { cursor: pointer; accent-color: #60a5fa; width: 16px; height: 16px; }
 `;
 
 export default function Login() {
@@ -58,10 +67,6 @@ export default function Login() {
     ];
   }
 
-  function saveAccounts(accounts) {
-    localStorage.setItem("accounts", JSON.stringify(accounts));
-  }
-
   function handleLogin(e) {
     e.preventDefault();
     if (!user || !password) { setError("Preencha todos os campos."); return; }
@@ -71,11 +76,9 @@ export default function Login() {
     const authData = JSON.stringify({ user: found.user, name: found.name, role: found.role });
     if (remember) {
       localStorage.setItem("auth", authData);
-      localStorage.setItem("authPersist", "true");
     } else {
       sessionStorage.setItem("auth", authData);
       localStorage.removeItem("auth");
-      localStorage.removeItem("authPersist");
     }
     setWelcome(found.name || found.user);
   }
@@ -88,9 +91,8 @@ export default function Login() {
     const accounts = getAccounts();
     if (accounts.find((a) => a.user === regUser)) { setRegError("Este usuário já existe."); return; }
     const newAccount = { name: regName, user: regUser, senha: regPass, role: regRole };
-    saveAccounts([...accounts, newAccount]);
-    const authData = JSON.stringify({ user: regUser, name: regName, role: regRole });
-    sessionStorage.setItem("auth", authData);
+    localStorage.setItem("accounts", JSON.stringify([...accounts, newAccount]));
+    sessionStorage.setItem("auth", JSON.stringify({ user: regUser, name: regName, role: regRole }));
     localStorage.removeItem("auth");
     setWelcome(regName);
   }
@@ -103,58 +105,84 @@ export default function Login() {
     setRegName(""); setRegUser(""); setRegPass(""); setRegPass2(""); setRegError("");
   }
 
-  // Define direção da animação
   const animClass = prevTab === null ? "" : tab === "register" ? "tab-content-right" : "tab-content-left";
 
-  if (welcome) {
-    return <Welcome name={welcome} onDone={() => navigate("/")} />;
-  }
+  if (welcome) return <Welcome name={welcome} onDone={() => navigate("/")} />;
 
   return (
     <div style={{
-      display: "flex", minHeight: "100vh",
-      background: "linear-gradient(135deg, #e3f2fd 0%, #f0f4f8 50%, #e8f5e9 100%)",
-      alignItems: "center", justifyContent: "center", padding: "20px",
+      minHeight: "100vh",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "20px",
+      position: "relative",
+      overflow: "hidden",
     }}>
       <style>{loginStyle}</style>
 
+      {/* Imagem de fundo */}
+      <div style={{
+        position: "fixed", inset: 0, zIndex: 0,
+        backgroundImage: `url(${BG_IMAGE})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        filter: "brightness(0.5)",
+      }} />
+
+      {/* Overlay gradiente */}
+      <div style={{
+        position: "fixed", inset: 0, zIndex: 1,
+        background: "linear-gradient(135deg, rgba(10,22,40,0.7) 0%, rgba(13,33,68,0.5) 50%, rgba(10,48,96,0.6) 100%)",
+      }} />
+
+      {/* Card */}
       <div className="login-card" style={{
-        background: "#fff", borderRadius: "20px",
-        boxShadow: "0 8px 40px rgba(0,0,0,0.12)",
-        width: "100%", maxWidth: "420px", overflow: "hidden",
+        position: "relative", zIndex: 2,
+        background: "rgba(255,255,255,0.08)",
+        backdropFilter: "blur(24px)",
+        WebkitBackdropFilter: "blur(24px)",
+        border: "1px solid rgba(255,255,255,0.15)",
+        borderRadius: "24px",
+        width: "100%", maxWidth: "420px",
+        overflow: "hidden",
+        boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
       }}>
         {/* Header */}
-        <div style={{ background: "linear-gradient(135deg, #2196f3, #1976d2)", padding: "28px 32px", textAlign: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px" }}>
-            <div style={{ width: 44, height: 44, background: "rgba(255,255,255,0.2)", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+        <div style={{ padding: "28px 28px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div style={{ width: 46, height: 46, background: "linear-gradient(135deg, #2196f3, #1565c0)", borderRadius: "14px", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 15px rgba(33,150,243,0.4)" }}>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
             </div>
-            <div style={{ textAlign: "left" }}>
+            <div>
               <h1 style={{ fontSize: "22px", fontWeight: 700, color: "#fff", margin: 0 }}>DentFlow</h1>
-              <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.7)", margin: 0 }}>Gestão Odontológica</p>
+              <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)", margin: 0 }}>Gestão Odontológica</p>
             </div>
           </div>
         </div>
 
         {/* Tabs */}
-        <div style={{ display: "flex", background: "#f4f6f8", margin: "24px 24px 0", borderRadius: "10px", padding: "4px" }}>
+        <div style={{ display: "flex", background: "rgba(255,255,255,0.05)", margin: "20px 20px 0", borderRadius: "12px", padding: "4px" }}>
           {["login", "register"].map((t) => (
             <button key={t} className="tab-btn" onClick={() => switchTab(t)} style={{
-              flex: 1, padding: "10px", borderRadius: "8px", fontSize: "14px", fontWeight: 600,
-              background: tab === t ? "#fff" : "transparent",
-              color: tab === t ? "#2563eb" : "#888",
-              boxShadow: tab === t ? "0 1px 4px rgba(0,0,0,0.1)" : "none",
+              flex: 1, padding: "10px", borderRadius: "10px", fontSize: "14px", fontWeight: 600,
+              background: tab === t ? "rgba(255,255,255,0.12)" : "transparent",
+              color: tab === t ? "#fff" : "rgba(255,255,255,0.45)",
+              boxShadow: tab === t ? "0 2px 8px rgba(0,0,0,0.2)" : "none",
+              border: tab === t ? "1px solid rgba(255,255,255,0.15)" : "1px solid transparent",
             }}>
               {t === "login" ? "Entrar" : "Cadastrar"}
             </button>
           ))}
         </div>
 
-        {/* Conteúdo com animação */}
+        {/* Conteúdo */}
         <div style={{ overflow: "hidden" }}>
-          <div key={tab} className={animClass} style={{ padding: "24px" }}>
+          <div key={tab} className={animClass} style={{ padding: "20px" }}>
             {tab === "login" ? (
               <>
+                {/* Role */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "20px" }}>
                   {[
                     { value: "dentista", label: "🦷 Dentista", sub: "Acesso completo" },
@@ -162,14 +190,14 @@ export default function Login() {
                   ].map((r) => (
                     <div key={r.value} className={`role-btn${role === r.value ? " selected" : ""}`}
                       onClick={() => { setRole(r.value); setError(""); }}
-                      style={{ padding: "12px", borderRadius: "10px", background: "#f8f9fc", textAlign: "center", userSelect: "none" }}>
-                      <div style={{ fontSize: "20px", marginBottom: "4px" }}>{r.label}</div>
-                      <div style={{ fontSize: "11px", color: "#888" }}>{r.sub}</div>
+                      style={{ padding: "12px", borderRadius: "12px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", textAlign: "center", userSelect: "none" }}>
+                      <div style={{ fontSize: "18px", marginBottom: "4px" }}>{r.label}</div>
+                      <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>{r.sub}</div>
                     </div>
                   ))}
                 </div>
 
-                <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                   <Field label="Usuário">
                     <input className="input-login" type="text"
                       placeholder={role === "dentista" ? "admin" : "paciente"}
@@ -181,14 +209,14 @@ export default function Login() {
                   </Field>
                   <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", userSelect: "none" }}>
                     <input type="checkbox" className="remember-check" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
-                    <span style={{ fontSize: "13px", color: "#555", fontWeight: 500 }}>Lembrar de mim</span>
+                    <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.6)", fontWeight: 500 }}>Lembrar de mim</span>
                   </label>
                   {error && <ErrorBox message={error} />}
                   <button className="btn-login" type="submit" style={btnStyle}>Entrar</button>
                 </form>
 
-                <div style={{ marginTop: "16px", padding: "12px", background: "#f8f9fc", borderRadius: "8px", fontSize: "12px", color: "#aaa", textAlign: "center" }}>
-                  Demo → Dentista: <strong style={{ color: "#555" }}>admin / 1234</strong> · Paciente: <strong style={{ color: "#555" }}>paciente / 1234</strong>
+                <div style={{ marginTop: "14px", padding: "10px 14px", background: "rgba(255,255,255,0.05)", borderRadius: "10px", fontSize: "12px", color: "rgba(255,255,255,0.35)", textAlign: "center", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  Demo → <strong style={{ color: "rgba(255,255,255,0.6)" }}>admin / 1234</strong> · <strong style={{ color: "rgba(255,255,255,0.6)" }}>paciente / 1234</strong>
                 </div>
               </>
             ) : (
@@ -200,13 +228,13 @@ export default function Login() {
                   ].map((r) => (
                     <div key={r.value} className={`role-btn${regRole === r.value ? " selected" : ""}`}
                       onClick={() => { setRegRole(r.value); setRegError(""); }}
-                      style={{ padding: "12px", borderRadius: "10px", background: "#f8f9fc", textAlign: "center", userSelect: "none", fontSize: "14px", fontWeight: 600, color: "#555" }}>
+                      style={{ padding: "12px", borderRadius: "12px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", textAlign: "center", userSelect: "none", fontSize: "14px", fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>
                       {r.label}
                     </div>
                   ))}
                 </div>
 
-                <form onSubmit={handleRegister} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                <form onSubmit={handleRegister} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                   <Field label="Nome completo">
                     <input className="input-login" type="text" placeholder="Seu nome"
                       value={regName} onChange={(e) => { setRegName(e.target.value); setRegError(""); }} style={inputStyle} />
@@ -237,8 +265,8 @@ export default function Login() {
 
 function Field({ label, children }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-      <label style={{ fontSize: "13px", fontWeight: 600, color: "#444" }}>{label}</label>
+    <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+      <label style={{ fontSize: "13px", fontWeight: 600, color: "rgba(255,255,255,0.65)" }}>{label}</label>
       {children}
     </div>
   );
@@ -246,11 +274,23 @@ function Field({ label, children }) {
 
 function ErrorBox({ message }) {
   return (
-    <div style={{ background: "#fee2e2", border: "1px solid #fecaca", borderRadius: "8px", padding: "10px 12px", fontSize: "13px", color: "#ef4444" }}>
+    <div style={{ background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: "10px", padding: "10px 14px", fontSize: "13px", color: "#f87171" }}>
       ⚠️ {message}
     </div>
   );
 }
 
-const inputStyle = { width: "100%", padding: "11px 12px", borderRadius: "8px", border: "1.5px solid #e2e5ee", fontSize: "14px", fontFamily: "inherit", boxSizing: "border-box", background: "#f8f9fc", color: "#1a1a2e" };
-const btnStyle = { width: "100%", padding: "12px", background: "#2563eb", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "15px", fontWeight: 600, marginTop: "4px", fontFamily: "inherit" };
+const inputStyle = {
+  width: "100%", padding: "11px 14px", borderRadius: "10px",
+  border: "1px solid rgba(255,255,255,0.15)", fontSize: "14px",
+  fontFamily: "Inter, sans-serif", boxSizing: "border-box",
+  background: "rgba(255,255,255,0.08)", color: "#fff",
+};
+
+const btnStyle = {
+  width: "100%", padding: "12px", fontSize: "15px", fontWeight: 600,
+  fontFamily: "Inter, sans-serif", border: "none", borderRadius: "10px",
+  cursor: "pointer", color: "#fff", marginTop: "4px",
+  background: "linear-gradient(135deg, #2196f3, #1565c0)",
+  boxShadow: "0 4px 15px rgba(33,150,243,0.4)",
+};
