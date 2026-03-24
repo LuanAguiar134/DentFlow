@@ -53,7 +53,7 @@ export default function Sidebar() {
 
         {/* Nav */}
         <nav style={{ flex: 1, padding: "12px 10px", overflowY: "auto" }}>
-          <NavItem to="/" label="Dashboard" active={location.pathname === "/"} icon={<DashIcon />} />
+          <NavItem to="/dashboard" label="Dashboard" active={location.pathname === "/dashboard"} icon={<DashIcon />} />
           <NavItem to="/agenda" label="Agenda" active={location.pathname === "/agenda"} icon={<CalIcon />} />
           {isDentista && (
             <>

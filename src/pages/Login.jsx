@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Welcome from "../components/Welcome";
 
-// Foto noturna azulada do Unsplash (livre para uso)
 const BG_IMAGE = "https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=1920&q=80&auto=format&fit=crop";
 
 const loginStyle = `
@@ -18,7 +17,11 @@ const loginStyle = `
     from { opacity: 0; transform: translateX(-20px); }
     to   { opacity: 1; transform: translateX(0); }
   }
-  .login-card     { animation: fadeUp 0.5s cubic-bezier(0.25,0.46,0.45,0.94) forwards; }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.5; }
+  }
+  .login-card        { animation: fadeUp 0.5s cubic-bezier(0.25,0.46,0.45,0.94) forwards; }
   .tab-content-right { animation: tabEnter 0.3s cubic-bezier(0.25,0.46,0.45,0.94) forwards; }
   .tab-content-left  { animation: tabEnterLeft 0.3s cubic-bezier(0.25,0.46,0.45,0.94) forwards; }
   .tab-btn { transition: all 0.2s; cursor: pointer; border: none; font-family: inherit; }
@@ -33,10 +36,31 @@ const loginStyle = `
   .btn-login { transition: all 0.2s; }
   .btn-login:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(33,150,243,0.5) !important; }
   .btn-login:active { transform: scale(0.98); }
+  .btn-demo {
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-demo:hover { transform: translateY(-1px); background: rgba(251,191,36,0.15) !important; border-color: rgba(251,191,36,0.5) !important; }
+  .btn-demo:active { transform: scale(0.98); }
+  .demo-dot { animation: pulse 1.5s ease-in-out infinite; }
   .role-btn { transition: all 0.2s; cursor: pointer; }
   .role-btn:hover { border-color: rgba(96,165,250,0.5) !important; background: rgba(255,255,255,0.12) !important; }
   .role-btn.selected { border-color: rgba(96,165,250,0.8) !important; background: rgba(33,150,243,0.2) !important; }
   .remember-check { cursor: pointer; accent-color: #60a5fa; width: 16px; height: 16px; }
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: rgba(255,255,255,0.2);
+    font-size: 12px;
+  }
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255,255,255,0.1);
+  }
 `;
 
 export default function Login() {
@@ -56,6 +80,7 @@ export default function Login() {
   const [regError, setRegError] = useState("");
 
   const [welcome, setWelcome] = useState(null);
+  const [isDemo, setIsDemo] = useState(false);
   const navigate = useNavigate();
 
   function getAccounts() {
@@ -80,6 +105,7 @@ export default function Login() {
       sessionStorage.setItem("auth", authData);
       localStorage.removeItem("auth");
     }
+    setIsDemo(false);
     setWelcome(found.name || found.user);
   }
 
@@ -94,7 +120,16 @@ export default function Login() {
     localStorage.setItem("accounts", JSON.stringify([...accounts, newAccount]));
     sessionStorage.setItem("auth", JSON.stringify({ user: regUser, name: regName, role: regRole }));
     localStorage.removeItem("auth");
+    setIsDemo(false);
     setWelcome(regName);
+  }
+
+  function handleDemo() {
+    const authData = JSON.stringify({ user: "admin", name: "Demonstração", role: "dentista" });
+    sessionStorage.setItem("auth", authData);
+    localStorage.removeItem("auth");
+    setIsDemo(true);
+    setWelcome("Demonstração");
   }
 
   function switchTab(t) {
@@ -107,35 +142,17 @@ export default function Login() {
 
   const animClass = prevTab === null ? "" : tab === "register" ? "tab-content-right" : "tab-content-left";
 
-  if (welcome) return <Welcome name={welcome} onDone={() => navigate("/")} />;
+  if (welcome) {
+    return <Welcome name={welcome} isDemo={isDemo} onDone={() => navigate("/dashboard")} />;
+  }
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: "20px",
-      position: "relative",
-      overflow: "hidden",
-    }}>
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", position: "relative", overflow: "hidden" }}>
       <style>{loginStyle}</style>
 
       {/* Imagem de fundo */}
-      <div style={{
-        position: "fixed", inset: 0, zIndex: 0,
-        backgroundImage: `url(${BG_IMAGE})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-        filter: "brightness(0.5)",
-      }} />
-
-      {/* Overlay gradiente */}
-      <div style={{
-        position: "fixed", inset: 0, zIndex: 1,
-        background: "linear-gradient(135deg, rgba(10,22,40,0.7) 0%, rgba(13,33,68,0.5) 50%, rgba(10,48,96,0.6) 100%)",
-      }} />
+      <div style={{ position: "fixed", inset: 0, zIndex: 0, backgroundImage: `url(${BG_IMAGE})`, backgroundSize: "cover", backgroundPosition: "center", filter: "brightness(0.5)" }} />
+      <div style={{ position: "fixed", inset: 0, zIndex: 1, background: "linear-gradient(135deg, rgba(10,22,40,0.7) 0%, rgba(13,33,68,0.5) 50%, rgba(10,48,96,0.6) 100%)" }} />
 
       {/* Card */}
       <div className="login-card" style={{
@@ -183,7 +200,7 @@ export default function Login() {
             {tab === "login" ? (
               <>
                 {/* Role */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "20px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "16px" }}>
                   {[
                     { value: "dentista", label: "🦷 Dentista", sub: "Acesso completo" },
                     { value: "paciente", label: "👤 Paciente", sub: "Minha área" },
@@ -215,13 +232,28 @@ export default function Login() {
                   <button className="btn-login" type="submit" style={btnStyle}>Entrar</button>
                 </form>
 
+                {/* Divisor */}
+                <div className="divider" style={{ margin: "16px 0" }}>ou</div>
+
+                {/* Botão Demo */}
+                <button className="btn-demo" onClick={handleDemo} style={{
+                  width: "100%", padding: "12px", fontSize: "14px", fontWeight: 600,
+                  fontFamily: "Inter, sans-serif", borderRadius: "10px", cursor: "pointer",
+                  color: "#fbbf24", background: "rgba(251,191,36,0.08)",
+                  border: "1px solid rgba(251,191,36,0.3)",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+                }}>
+                  <span className="demo-dot" style={{ width: 7, height: 7, background: "#fbbf24", borderRadius: "50%", display: "inline-block" }} />
+                  Entrar na versão Demo
+                </button>
+
                 <div style={{ marginTop: "14px", padding: "10px 14px", background: "rgba(255,255,255,0.05)", borderRadius: "10px", fontSize: "12px", color: "rgba(255,255,255,0.35)", textAlign: "center", border: "1px solid rgba(255,255,255,0.08)" }}>
                   Demo → <strong style={{ color: "rgba(255,255,255,0.6)" }}>admin / 1234</strong> · <strong style={{ color: "rgba(255,255,255,0.6)" }}>paciente / 1234</strong>
                 </div>
               </>
             ) : (
               <>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "20px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "16px" }}>
                   {[
                     { value: "dentista", label: "🦷 Dentista" },
                     { value: "paciente", label: "👤 Paciente" },

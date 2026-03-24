@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 
+import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import Agenda from "./pages/Agenda";
 import Patients from "./pages/Patients";
@@ -18,7 +19,6 @@ const fadeStyle = `
 `;
 
 export function getAuth() {
-  // Primeiro tenta sessionStorage (sem lembrar), depois localStorage (lembrar)
   const session = sessionStorage.getItem("auth");
   if (session) return JSON.parse(session);
   const local = localStorage.getItem("auth");
@@ -60,13 +60,18 @@ function AnimatedRoutes() {
       <div key={displayLocation.pathname} className={stage === "enter" ? "page-enter" : "page-exit"}
         style={{ width: "100%", minHeight: "100vh" }}>
         <Routes location={displayLocation}>
+          {/* Página inicial pública */}
+          <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+
+          {/* Rotas protegidas */}
+          <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
           <Route path="/agenda" element={<PrivateRoute><Agenda /></PrivateRoute>} />
           <Route path="/patients" element={<PrivateRoute dentistaOnly><Patients /></PrivateRoute>} />
           <Route path="/procedures" element={<PrivateRoute dentistaOnly><Procedures /></PrivateRoute>} />
           <Route path="/financial" element={<PrivateRoute dentistaOnly><Financial /></PrivateRoute>} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
+
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
     </>
