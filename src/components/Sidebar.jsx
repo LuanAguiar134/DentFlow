@@ -1,44 +1,52 @@
+import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { glassBase } from "../styles/glassStyles";
+import { getAuth } from "../App";
+import Goodbye from "./Goodbye";
 
 export default function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const auth = getAuth();
+  const isDentista = auth?.role === "dentista";
+  const [goodbye, setGoodbye] = useState(false);
 
   function handleLogout() {
-    localStorage.removeItem("auth");
-    sessionStorage.removeItem("auth");
-    navigate("/login");
+    const name = auth?.name || auth?.user || "usuário";
+    setGoodbye(name);
+  }
+
+  if (goodbye) {
+    return <Goodbye name={goodbye} onDone={() => {
+      localStorage.removeItem("auth");
+      sessionStorage.removeItem("auth");
+      navigate("/login");
+    }} />;
   }
 
   return (
     <>
       <style>{glassBase}</style>
       <div style={{
-        width: "220px",
-        height: "100vh",
+        width: "220px", height: "100vh",
         background: "rgba(10,22,40,0.6)",
         backdropFilter: "blur(20px)",
         WebkitBackdropFilter: "blur(20px)",
         borderRight: "1px solid rgba(255,255,255,0.08)",
-        display: "flex",
-        flexDirection: "column",
-        flexShrink: 0,
-        position: "sticky",
-        top: 0,
-        zIndex: 10,
+        display: "flex", flexDirection: "column",
+        flexShrink: 0, position: "sticky", top: 0, zIndex: 10,
       }}>
         {/* Logo */}
         <div style={{ padding: "20px 16px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <div style={{ width: 40, height: 40, background: "linear-gradient(135deg, #2196f3, #1565c0)", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(33,150,243,0.4)" }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
-                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-              </svg>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
             </div>
             <div>
-              <div style={{ fontSize: "16px", fontWeight: 700, color: "#fff" }}>DentFlow</div>
-              <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.45)" }}>Gestão Odontológica</div>
+              <div style={{ fontSize: "15px", fontWeight: 700, color: "#fff" }}>DentFlow</div>
+              <div style={{ fontSize: "11px", color: isDentista ? "#60a5fa" : "#4ade80", fontWeight: 600 }}>
+                {isDentista ? "🦷 Dentista" : "👤 Paciente"}
+              </div>
             </div>
           </div>
         </div>
@@ -47,9 +55,13 @@ export default function Sidebar() {
         <nav style={{ flex: 1, padding: "12px 10px", overflowY: "auto" }}>
           <NavItem to="/" label="Dashboard" active={location.pathname === "/"} icon={<DashIcon />} />
           <NavItem to="/agenda" label="Agenda" active={location.pathname === "/agenda"} icon={<CalIcon />} />
-          <NavItem to="/patients" label="Pacientes" active={location.pathname === "/patients"} icon={<UserIcon />} />
-          <NavItem to="/procedures" label="Procedimentos" active={location.pathname === "/procedures"} icon={<ProcIcon />} />
-          <NavItem to="/financial" label="Financeiro" active={location.pathname === "/financial"} icon={<MoneyIcon />} />
+          {isDentista && (
+            <>
+              <NavItem to="/patients" label="Pacientes" active={location.pathname === "/patients"} icon={<UserIcon />} />
+              <NavItem to="/procedures" label="Procedimentos" active={location.pathname === "/procedures"} icon={<ProcIcon />} />
+              <NavItem to="/financial" label="Financeiro" active={location.pathname === "/financial"} icon={<MoneyIcon />} />
+            </>
+          )}
         </nav>
 
         {/* Sair */}
