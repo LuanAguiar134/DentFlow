@@ -1,89 +1,33 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
-
-import Landing from "./pages/Landing";
-import Dashboard from "./pages/Dashboard";
-import Agenda from "./pages/Agenda";
-import Patients from "./pages/Patients";
-import Procedures from "./pages/Procedures";
-import Financial from "./pages/Financial";
-import Login from "./pages/Login";
-
-const fadeStyle = `
-  @keyframes pageEnter {
-    from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .page-enter { animation: pageEnter 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
-  .page-exit  { opacity: 0; transition: opacity 0.25s ease; }
-`;
-
-export function getAuth() {
-  const session = sessionStorage.getItem("auth");
-  if (session) return JSON.parse(session);
-  const local = localStorage.getItem("auth");
-  if (local) return JSON.parse(local);
-  return null;
-}
-
-export function getRole() {
-  const auth = getAuth();
-  return auth ? auth.role : null;
-}
-
-function PrivateRoute({ children, dentistaOnly = false }) {
-  const auth = getAuth();
-  if (!auth) return <Navigate to="/login" replace />;
-  if (dentistaOnly && auth.role !== "dentista") return <Navigate to="/" replace />;
-  return children;
-}
-
-function AnimatedRoutes() {
-  const location = useLocation();
-  const [displayLocation, setDisplayLocation] = useState(location);
-  const [stage, setStage] = useState("enter");
-
-  useEffect(() => {
-    if (location.pathname !== displayLocation.pathname) {
-      setStage("exit");
-      const t = setTimeout(() => {
-        setDisplayLocation(location);
-        setStage("enter");
-      }, 250);
-      return () => clearTimeout(t);
-    }
-  }, [location]);
-
-  return (
-    <>
-      <style>{fadeStyle}</style>
-      <div key={displayLocation.pathname} className={stage === "enter" ? "page-enter" : "page-exit"}
-        style={{ width: "100%", minHeight: "100vh" }}>
-        <Routes location={displayLocation}>
-          {/* Página inicial pública */}
-          <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login />} />
-
-          {/* Rotas protegidas */}
-          <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-          <Route path="/agenda" element={<PrivateRoute><Agenda /></PrivateRoute>} />
-          <Route path="/patients" element={<PrivateRoute dentistaOnly><Patients /></PrivateRoute>} />
-          <Route path="/procedures" element={<PrivateRoute dentistaOnly><Procedures /></PrivateRoute>} />
-          <Route path="/financial" element={<PrivateRoute dentistaOnly><Financial /></PrivateRoute>} />
-
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </div>
-    </>
-  );
-}
+import { QueryClientProvider } from '@tanstack/react-query'
+import { queryClientInstance } from '@/lib/query-client'
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
+import PageNotFound from '@/lib/PageNotFound'
+import AppLayout from '@/components/layout/AppLayout'
+import Home from '@/pages/Home'
+import Collection from '@/pages/Collection'
+import ProductDetail from '@/pages/ProductDetail'
+import NewArrivals from '@/pages/NewArrivals'
+import About from '@/pages/About'
+import Login from '@/pages/Login'
 
 function App() {
   return (
-    <BrowserRouter>
-      <AnimatedRoutes />
-    </BrowserRouter>
-  );
+    <QueryClientProvider client={queryClientInstance}>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route element={<AppLayout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/colecao" element={<Collection />} />
+            <Route path="/produto/:id" element={<ProductDetail />} />
+            <Route path="/novidades" element={<NewArrivals />} />
+            <Route path="/sobre" element={<About />} />
+          </Route>
+          <Route path="*" element={<PageNotFound />} />
+        </Routes>
+      </Router>
+    </QueryClientProvider>
+  )
 }
 
-export default App;
+export default App
