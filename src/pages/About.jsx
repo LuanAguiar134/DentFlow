@@ -21,7 +21,7 @@ export default function About() {
           Onde a elegância encontra a emoção
         </h2>
         <div className="space-y-4 font-body text-sm text-pearl/50 leading-relaxed max-w-3xl">
-          <p>Fundado em 2018, o Velvet Atelier nasceu de um sonho: criar vestidos que não apenas vestissem o corpo, mas que tocassem a alma. Cada peça é resultado de meses de pesquisa, seleção de tecidos e confecção artesanal.</p>
+          <p>Fundado em 2018, o Zuest Fashion nasceu de um sonho: criar vestidos que não apenas vestissem o corpo, mas que tocassem a alma. Cada peça é resultado de meses de pesquisa, seleção de tecidos e confecção artesanal.</p>
           <p>Nosso ateliê combina técnicas tradicionais de alta-costura com uma visão contemporânea de elegância. Acreditamos que um vestido deve contar uma história — a sua história.</p>
           <p>Trabalhamos com os melhores fornecedores de tecidos da Itália, França e Japão, garantindo que cada detalhe, cada costura, cada acabamento esteja à altura da mulher que o veste.</p>
         </div>
